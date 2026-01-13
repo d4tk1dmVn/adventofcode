@@ -59,9 +59,6 @@ def add_to_new_circuit(result, pair, smallest)
   pair.each { |point| result[point] = smallest }
 end
 
-def make_connections(distances, limit)
-end
-
 def calculate_relevant_connections(distances, limit)
   smallest = 0
   result = {}
