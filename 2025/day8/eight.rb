@@ -76,23 +76,6 @@ def calculate_relevant_connections(distances, limit)
   result
 end
 
-def calculate_last_connection(distances, limit)
-  smallest = 0
-  aux = {}
-  distances.each do |pair|
-    circuits = pair.map { |point| aux[point] }
-    if are_in_diff_circuits?(circuits)
-      connect_two_circuits(aux, circuits)
-    elsif circuits.any?
-      add_to_existing_circuit(aux, pair)
-    else
-      add_to_new_circuit(aux, pair, smallest)
-      smallest += 1
-    end
-    return pair if aux.keys.length == limit
-  end
-end
-
 def calculate_product(connections)
   grouped = connections.group_by { |_, v| v }.values
   counted = grouped.map(&:length).sort[-3..]
@@ -106,9 +89,28 @@ def run_part_one(path, distances)
   puts "for file #{path}, the result is #{result}"
 end
 
+def kruskal(distances, limit)
+  smallest = 0
+  aux = {}
+  distances.each do |pair|
+    circuits = pair.map { |point| aux[point] }
+    if circuits.all?(nil) # None of the points are in the MST
+      add_to_new_circuit(aux, pair, smallest)
+      smallest += 1
+    elsif circuits.count(nil) == 1 # One of the points isn't in the MST
+      add_to_existing_circuit(aux, pair)
+    # FROM HERE ONWARDS BOTH POINTS ARE IN THE MST
+    elsif circuits[0] != circuits[1] # Different circuits == merge two circuits!!!
+      connect_two_circuits(aux, circuits)
+    end
+    return pair if aux.keys.length == limit && aux.values.uniq.length == 1
+  end
+  distances[-1] # very bad luck, very sad
+end
+
 def run_part_two(path, limit, distances)
-  keys = calculate_last_connection(distances, limit)
-  result = keys.map { |point| point[0] }.reduce(&:*)
+  mst_last_pair = kruskal(distances, limit)
+  result = mst_last_pair.map { |point| point[0] }.reduce(&:*)
   puts "for file #{path}, the result should be #{result}"
 end
 
